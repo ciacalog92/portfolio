@@ -2,87 +2,67 @@ import React, { useState, useMemo } from 'react';
 import { iphones } from '../data/iphones';
 import ProductCard from './ProductCard';
 
-const allModels = [...new Set(iphones.map(p => p.model))];
-const allGrades = ['A', 'B', 'C'];
-
 export default function Catalog({ onAdd }) {
   const [search, setSearch] = useState('');
-  const [filterModel, setFilterModel] = useState('');
-  const [filterGrade, setFilterGrade] = useState('');
-  const [sortBy, setSortBy] = useState('model');
+  const [filterAvail, setFilterAvail] = useState('');
 
-  const filtered = useMemo(() => {
-    let list = iphones.filter(p => {
-      const q = search.toLowerCase();
-      const matchSearch =
-        !q ||
-        p.model.toLowerCase().includes(q) ||
-        p.color.toLowerCase().includes(q) ||
-        p.storage.toLowerCase().includes(q);
-      const matchModel = !filterModel || p.model === filterModel;
-      const matchGrade = !filterGrade || p.grade === filterGrade;
-      return matchSearch && matchModel && matchGrade;
+  const groups = useMemo(() => {
+    const q = search.toLowerCase();
+    const filtered = iphones.filter(p => {
+      const matchSearch = !q || p.model.toLowerCase().includes(q);
+      const matchAvail = !filterAvail || p.availability === filterAvail;
+      return matchSearch && matchAvail;
     });
 
-    list = [...list].sort((a, b) => {
-      if (sortBy === 'price-asc') return a.price - b.price;
-      if (sortBy === 'price-desc') return b.price - a.price;
-      return a.model.localeCompare(b.model);
+    const map = {};
+    filtered.forEach(p => {
+      if (!map[p.model]) {
+        map[p.model] = { model: p.model, availability: p.availability, isNew: p.isNew || false, variants: [] };
+      }
+      map[p.model].variants.push(p);
     });
-
-    return list;
-  }, [search, filterModel, filterGrade, sortBy]);
+    return Object.values(map);
+  }, [search, filterAvail]);
 
   return (
     <section className="catalog-section">
-      <h2 className="section-title">Catalogo iPhone Ricondizionati</h2>
+      <h2 className="section-title">Listino iPhone</h2>
 
       <div className="filters">
         <input
           className="search-input"
           type="text"
-          placeholder="Cerca modello, colore, storage..."
+          placeholder="Cerca modello..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
         <select
           className="filter-select"
-          value={filterModel}
-          onChange={e => setFilterModel(e.target.value)}
+          value={filterAvail}
+          onChange={e => setFilterAvail(e.target.value)}
         >
-          <option value="">Tutti i modelli</option>
-          {allModels.map(m => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
-        <select
-          className="filter-select"
-          value={filterGrade}
-          onChange={e => setFilterGrade(e.target.value)}
-        >
-          <option value="">Tutti i gradi</option>
-          {allGrades.map(g => (
-            <option key={g} value={g}>Grado {g}</option>
-          ))}
-        </select>
-        <select
-          className="filter-select"
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value)}
-        >
-          <option value="model">Ordina per modello</option>
-          <option value="price-asc">Prezzo crescente</option>
-          <option value="price-desc">Prezzo decrescente</option>
+          <option value="">Tutti</option>
+          <option value="available">Disponibile</option>
+          <option value="on-request">Previa disponibilità</option>
         </select>
       </div>
 
-      <p className="results-count">{filtered.length} prodotti trovati</p>
+      <p className="results-count">{groups.length} modell{groups.length === 1 ? 'o' : 'i'} trovat{groups.length === 1 ? 'o' : 'i'}</p>
 
       <div className="product-grid">
-        {filtered.map(phone => (
-          <ProductCard key={phone.id} phone={phone} onAdd={onAdd} />
+        {groups.map(g => (
+          <ProductCard key={g.model} group={g} onAdd={onAdd} />
         ))}
       </div>
+
+      <div className="catalog-legend">
+        <span className="legend-item"><span className="badge badge-request">⚠ Previa disponibilità</span> Contattare Daniele prima di confermare</span>
+        <span className="legend-item"><span className="badge badge-new">NUOVO</span> Prezzo riferito al prodotto nuovo (non ricondizionato)</span>
+      </div>
+
+      <p className="catalog-warranty">
+        Garanzia 12 mesi sul telefono + 3 mesi sulla batteria su tutti i dispositivi ricondizionati
+      </p>
     </section>
   );
 }
