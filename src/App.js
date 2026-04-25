@@ -10,20 +10,21 @@ export default function App() {
   const [completedOrder, setCompletedOrder] = useState(null);
 
   function handleAdd(phone) {
+    const cartKey = `${phone.id}-${phone.color?.name || ''}`;
     setCartItems(prev => {
-      const existing = prev.find(i => i.id === phone.id);
-      if (existing) return prev.map(i => i.id === phone.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { ...phone, qty: 1 }];
+      const existing = prev.find(i => i.cartKey === cartKey);
+      if (existing) return prev.map(i => i.cartKey === cartKey ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { ...phone, cartKey, qty: 1 }];
     });
   }
 
-  function handleRemove(id) {
-    setCartItems(prev => prev.filter(i => i.id !== id));
+  function handleRemove(cartKey) {
+    setCartItems(prev => prev.filter(i => i.cartKey !== cartKey));
   }
 
-  function handleQuantityChange(id, qty) {
-    if (qty <= 0) { handleRemove(id); return; }
-    setCartItems(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
+  function handleQuantityChange(cartKey, qty) {
+    if (qty <= 0) { handleRemove(cartKey); return; }
+    setCartItems(prev => prev.map(i => i.cartKey === cartKey ? { ...i, qty } : i));
   }
 
   function handleOrderComplete(order) {
@@ -120,8 +121,12 @@ export default function App() {
 
               <div className="done-items">
                 {completedOrder.items.map(item => (
-                  <div key={item.id} className="done-item-line">
-                    <span>{item.model} {item.storage} × {item.qty}</span>
+                  <div key={item.cartKey} className="done-item-line">
+                    <span>
+                      {item.model} {item.storage}
+                      {item.color ? ` · ${item.color.name}` : ''}
+                      {' × '}{item.qty}
+                    </span>
                     <span>€{(item.price * item.qty).toFixed(2)}</span>
                   </div>
                 ))}
