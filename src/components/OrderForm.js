@@ -8,7 +8,7 @@ function validate(f) {
   if (!f.nome.trim())     e.nome     = 'Campo obbligatorio';
   if (!f.cognome.trim())  e.cognome  = 'Campo obbligatorio';
   if (!f.cellulare.trim()) e.cellulare = 'Campo obbligatorio';
-  else if (!/^[\d\s\+\-]{6,15}$/.test(f.cellulare)) e.cellulare = 'Numero non valido';
+  else if (!/^[\d\s+\-]{6,15}$/.test(f.cellulare)) e.cellulare = 'Numero non valido';
   if (!f.email.trim())    e.email    = 'Campo obbligatorio';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Email non valida';
   if (!f.sede)            e.sede     = 'Seleziona la sede';
