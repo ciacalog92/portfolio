@@ -1,5 +1,23 @@
 import React, { useState } from 'react';
-import { modelColors, modelSpecs } from '../data/iphones';
+import { modelColors, modelSpecs, modelImageUrl } from '../data/iphones';
+
+// Wraps PhoneShape with a real <img> overlay; img stays hidden until it loads,
+// so a missing file (404) leaves the SVG visible underneath.
+function PhonePreview({ model, colorHex }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  return (
+    <div className="pc2-phone-wrap">
+      <PhoneShape model={model} colorHex={colorHex} />
+      <img
+        src={modelImageUrl(model)}
+        alt={model}
+        className={`pc2-phone-photo${imgLoaded ? ' loaded' : ''}`}
+        onLoad={() => setImgLoaded(true)}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      />
+    </div>
+  );
+}
 
 function PhoneShape({ model, colorHex }) {
   const isSE  = model.includes('SE');
@@ -184,10 +202,10 @@ export default function ProductCard({ group, onAdd }) {
       className={`product-card2${isOnRequest ? ' on-request' : ''}`}
       style={{ '--card-accent': accentHex }}
     >
-      {/* Header: phone silhouette + model info */}
+      {/* Header: phone preview + model info */}
       <div className="pc2-header">
         <div className="pc2-phone">
-          <PhoneShape model={model} colorHex={accentHex} />
+          <PhonePreview model={model} colorHex={accentHex} />
         </div>
         <div className="pc2-header-info">
           <div className="pc2-title-row">
@@ -198,11 +216,22 @@ export default function ProductCard({ group, onAdd }) {
             </div>
           </div>
           {specs && (
-            <div className="pc2-specs">
-              <span className="pc2-spec">{specs.display}</span>
-              <span className="pc2-spec">{specs.chip}</span>
-              <span className="pc2-spec">{specs.camera}</span>
-            </div>
+            <>
+              <div className="pc2-specs">
+                <span className="pc2-spec" title="Display">📱 {specs.display}</span>
+                <span className="pc2-spec" title="Chip">⚡ {specs.chip}</span>
+                <span className="pc2-spec" title="Fotocamera posteriore">📷 {specs.rearCam}</span>
+              </div>
+              <div className="pc2-specs">
+                <span className="pc2-spec" title="Batteria">🔋 {specs.battery}</span>
+                <span className="pc2-spec" title="Connettore">🔌 {specs.connector}</span>
+                <span className="pc2-spec" title="Sblocco">{specs.biometric === 'Face ID' ? '😀' : '👆'} {specs.biometric}</span>
+                {specs.fiveG && <span className="pc2-spec pc2-spec-on">5G</span>}
+                {specs.promotion && <span className="pc2-spec pc2-spec-on">ProMotion 120Hz</span>}
+                {specs.intelligence && <span className="pc2-spec pc2-spec-on">Apple Intelligence</span>}
+                <span className="pc2-spec" title="Anno di lancio">📅 {specs.year}</span>
+              </div>
+            </>
           )}
           {isOnRequest && !isNew && (
             <p className="on-request-note" style={{ marginTop: 6, marginBottom: 0 }}>

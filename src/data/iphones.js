@@ -250,29 +250,43 @@ export const modelColors = {
   ],
 };
 
+// Caratteristiche tecniche complete per ogni modello
 export const modelSpecs = {
-  "iPhone SE 2020":    { display: '4.7"', chip: 'A13 Bionic', camera: '12 MP' },
-  "iPhone SE 2022":    { display: '4.7"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 12 Mini":    { display: '5.4"', chip: 'A14 Bionic', camera: '12 MP' },
-  "iPhone 12":         { display: '6.1"', chip: 'A14 Bionic', camera: '12 MP' },
-  "iPhone 12 Pro":     { display: '6.1"', chip: 'A14 Bionic', camera: '12 MP' },
-  "iPhone 12 Pro Max": { display: '6.7"', chip: 'A14 Bionic', camera: '12 MP' },
-  "iPhone 13 Mini":    { display: '5.4"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 13":         { display: '6.1"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 13 Pro":     { display: '6.1"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 13 Pro Max": { display: '6.7"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 14":         { display: '6.1"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 14 Plus":    { display: '6.7"', chip: 'A15 Bionic', camera: '12 MP' },
-  "iPhone 14 Pro":     { display: '6.1"', chip: 'A16 Bionic', camera: '48 MP' },
-  "iPhone 14 Pro Max": { display: '6.7"', chip: 'A16 Bionic', camera: '48 MP' },
-  "iPhone 15":         { display: '6.1"', chip: 'A16 Bionic', camera: '48 MP' },
-  "iPhone 15 Plus":    { display: '6.7"', chip: 'A16 Bionic', camera: '48 MP' },
-  "iPhone 15 Pro":     { display: '6.1"', chip: 'A17 Pro',    camera: '48 MP' },
-  "iPhone 15 Pro Max": { display: '6.7"', chip: 'A17 Pro',    camera: '48 MP' },
-  "iPhone 16":         { display: '6.1"', chip: 'A18',        camera: '48 MP' },
-  "iPhone 16 Pro":     { display: '6.3"', chip: 'A18 Pro',    camera: '48 MP' },
-  "iPhone 16 Pro Max": { display: '6.9"', chip: 'A18 Pro',    camera: '48 MP' },
-  "iPhone 17":         { display: '6.1"', chip: 'A19',        camera: '48 MP' },
-  "iPhone 17 Pro":     { display: '6.3"', chip: 'A19 Pro',    camera: '48 MP' },
-  "iPhone 17 Pro Max": { display: '6.9"', chip: 'A19 Pro',    camera: '48 MP' },
+  "iPhone SE 2020":    { display: '4.7" Retina HD',                chip: 'A13 Bionic',  rearCam: '12 MP',         frontCam: '7 MP',          battery: '~13 h video',   connector: 'Lightning', biometric: 'Touch ID', fiveG: false, promotion: false, dynamicIsland: false, intelligence: false, weight: '148 g', year: 2020 },
+  "iPhone SE 2022":    { display: '4.7" Retina HD',                chip: 'A15 Bionic',  rearCam: '12 MP',         frontCam: '7 MP',          battery: '~15 h video',   connector: 'Lightning', biometric: 'Touch ID', fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '144 g', year: 2022 },
+  "iPhone 12 Mini":    { display: '5.4" Super Retina XDR',         chip: 'A14 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~15 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '133 g', year: 2020 },
+  "iPhone 12":         { display: '6.1" Super Retina XDR',         chip: 'A14 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~17 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '164 g', year: 2020 },
+  "iPhone 12 Pro":     { display: '6.1" Super Retina XDR',         chip: 'A14 Bionic',  rearCam: '12 MP Pro',     frontCam: '12 MP TrueDepth', battery: '~17 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '189 g', year: 2020 },
+  "iPhone 12 Pro Max": { display: '6.7" Super Retina XDR',         chip: 'A14 Bionic',  rearCam: '12 MP Pro',     frontCam: '12 MP TrueDepth', battery: '~20 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '226 g', year: 2020 },
+  "iPhone 13 Mini":    { display: '5.4" Super Retina XDR',         chip: 'A15 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~17 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '141 g', year: 2021 },
+  "iPhone 13":         { display: '6.1" Super Retina XDR',         chip: 'A15 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~19 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '174 g', year: 2021 },
+  "iPhone 13 Pro":     { display: '6.1" Super Retina XDR ProMotion 120Hz', chip: 'A15 Bionic', rearCam: '12 MP Pro · LiDAR', frontCam: '12 MP TrueDepth', battery: '~22 h video', connector: 'Lightning', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: false, intelligence: false, weight: '204 g', year: 2021 },
+  "iPhone 13 Pro Max": { display: '6.7" Super Retina XDR ProMotion 120Hz', chip: 'A15 Bionic', rearCam: '12 MP Pro · LiDAR', frontCam: '12 MP TrueDepth', battery: '~28 h video', connector: 'Lightning', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: false, intelligence: false, weight: '240 g', year: 2021 },
+  "iPhone 14":         { display: '6.1" Super Retina XDR',         chip: 'A15 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~20 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '172 g', year: 2022 },
+  "iPhone 14 Plus":    { display: '6.7" Super Retina XDR',         chip: 'A15 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~26 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '203 g', year: 2022 },
+  "iPhone 14 Pro":     { display: '6.1" Super Retina XDR ProMotion · Dynamic Island', chip: 'A16 Bionic', rearCam: '48 MP Pro · LiDAR', frontCam: '12 MP TrueDepth', battery: '~23 h video', connector: 'Lightning', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: false, weight: '206 g', year: 2022 },
+  "iPhone 14 Pro Max": { display: '6.7" Super Retina XDR ProMotion · Dynamic Island', chip: 'A16 Bionic', rearCam: '48 MP Pro · LiDAR', frontCam: '12 MP TrueDepth', battery: '~29 h video', connector: 'Lightning', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: false, weight: '240 g', year: 2022 },
+  "iPhone 15":         { display: '6.1" Super Retina XDR · Dynamic Island', chip: 'A16 Bionic', rearCam: '48 MP Dual', frontCam: '12 MP TrueDepth', battery: '~20 h video', connector: 'USB-C', biometric: 'Face ID', fiveG: true, promotion: false, dynamicIsland: true, intelligence: false, weight: '171 g', year: 2023 },
+  "iPhone 15 Plus":    { display: '6.7" Super Retina XDR · Dynamic Island', chip: 'A16 Bionic', rearCam: '48 MP Dual', frontCam: '12 MP TrueDepth', battery: '~26 h video', connector: 'USB-C', biometric: 'Face ID', fiveG: true, promotion: false, dynamicIsland: true, intelligence: false, weight: '201 g', year: 2023 },
+  "iPhone 15 Pro":     { display: '6.1" Super Retina XDR ProMotion · Always-On',     chip: 'A17 Pro · 3nm', rearCam: '48 MP Pro · LiDAR · 3× tele', frontCam: '12 MP TrueDepth', battery: '~23 h video', connector: 'USB-C 3', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: true, weight: '187 g', year: 2023 },
+  "iPhone 15 Pro Max": { display: '6.7" Super Retina XDR ProMotion · Always-On',     chip: 'A17 Pro · 3nm', rearCam: '48 MP Pro · LiDAR · 5× tele', frontCam: '12 MP TrueDepth', battery: '~29 h video', connector: 'USB-C 3', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: true, weight: '221 g', year: 2023 },
+  "iPhone 16":         { display: '6.1" Super Retina XDR · Dynamic Island',          chip: 'A18',           rearCam: '48 MP Fusion · 2× tele', frontCam: '12 MP TrueDepth', battery: '~22 h video', connector: 'USB-C', biometric: 'Face ID', fiveG: true, promotion: false, dynamicIsland: true, intelligence: true, weight: '170 g', year: 2024 },
+  "iPhone 16 Pro":     { display: '6.3" Super Retina XDR ProMotion · Always-On',     chip: 'A18 Pro',       rearCam: '48 MP Pro · LiDAR · 5× tele', frontCam: '12 MP TrueDepth', battery: '~27 h video', connector: 'USB-C 3', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: true, weight: '199 g', year: 2024 },
+  "iPhone 16 Pro Max": { display: '6.9" Super Retina XDR ProMotion · Always-On',     chip: 'A18 Pro',       rearCam: '48 MP Pro · LiDAR · 5× tele', frontCam: '12 MP TrueDepth', battery: '~33 h video', connector: 'USB-C 3', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: true, weight: '227 g', year: 2024 },
+  "iPhone 17":         { display: '6.1" Super Retina XDR · Dynamic Island',          chip: 'A19',           rearCam: '48 MP Fusion · 2× tele', frontCam: '18 MP TrueDepth',  battery: '~24 h video', connector: 'USB-C', biometric: 'Face ID', fiveG: true, promotion: false, dynamicIsland: true, intelligence: true, weight: '170 g', year: 2025 },
+  "iPhone 17 Pro":     { display: '6.3" Super Retina XDR ProMotion · Always-On',     chip: 'A19 Pro',       rearCam: '48 MP Pro · LiDAR · 5× tele', frontCam: '18 MP TrueDepth', battery: '~28 h video', connector: 'USB-C 3', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: true, weight: '199 g', year: 2025 },
+  "iPhone 17 Pro Max": { display: '6.9" Super Retina XDR ProMotion · Always-On',     chip: 'A19 Pro',       rearCam: '48 MP Pro · LiDAR · 5× tele', frontCam: '18 MP TrueDepth', battery: '~34 h video', connector: 'USB-C 3', biometric: 'Face ID', fiveG: true, promotion: true, dynamicIsland: true, intelligence: true, weight: '228 g', year: 2025 },
 };
+
+// Path slug for product images placed in /public/images/iphones/
+// e.g. "iPhone 15 Pro" → "iphone-15-pro" → /images/iphones/iphone-15-pro.jpg
+export function modelSlug(model) {
+  return model.toLowerCase().replace(/\s+/g, '-');
+}
+
+// PUBLIC_URL keeps the path correct on GitHub Pages (./).
+// The img tag will silently fall back to the SVG render if the file is missing.
+export function modelImageUrl(model) {
+  const base = process.env.PUBLIC_URL || '.';
+  return `${base}/images/iphones/${modelSlug(model)}.jpg`;
+}
