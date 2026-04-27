@@ -1,4 +1,5 @@
 import React from 'react';
+import { modelColors } from '../data/iphones';
 
 export default function Cart({ items, onRemove, onQuantityChange }) {
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
@@ -17,32 +18,43 @@ export default function Cart({ items, onRemove, onQuantityChange }) {
     <div className="cart">
       <h3 className="cart-title">Ordine in corso</h3>
       <ul className="cart-list">
-        {items.map(item => (
-          <li key={item.cartKey} className="cart-item">
-            {item.color && (
-              <span
-                className="cart-item-dot"
-                style={{ background: item.color.hex }}
-                title={item.color.name}
-              />
-            )}
-            <div className="cart-item-info">
-              <span className="cart-item-name">{item.model}</span>
-              <span className="cart-item-sub">
-                {item.storage}
-                {item.color ? ` · ${item.color.name}` : ''}
-                {item.isNew ? ' · NUOVO' : ''}
-              </span>
-            </div>
-            <div className="cart-item-controls">
-              <button className="qty-btn" onClick={() => onQuantityChange(item.cartKey, item.qty - 1)}>−</button>
-              <span className="qty-value">{item.qty}</span>
-              <button className="qty-btn" onClick={() => onQuantityChange(item.cartKey, item.qty + 1)}>+</button>
-            </div>
-            <span className="cart-item-price">€{(item.price * item.qty).toFixed(2)}</span>
-            <button className="cart-remove" onClick={() => onRemove(item.cartKey)}>✕</button>
-          </li>
-        ))}
+        {items.map(item => {
+          const palette = modelColors[item.model] || [];
+          const dots = (item.colors || []).map(name => {
+            const c = palette.find(mc => mc.name === name);
+            return c ? { name, hex: c.hex, preferred: name === item.preferredColor } : null;
+          }).filter(Boolean);
+
+          return (
+            <li key={item.cartKey} className="cart-item">
+              <div className="cart-item-info">
+                <span className="cart-item-name">{item.model}</span>
+                <span className="cart-item-sub">
+                  {item.storage}{item.isNew ? ' · NUOVO' : ''}
+                </span>
+                {dots.length > 0 && (
+                  <div className="cart-color-dots">
+                    {dots.map(c => (
+                      <span
+                        key={c.name}
+                        className={`cart-dot${c.preferred ? ' preferred' : ''}`}
+                        style={{ background: c.hex }}
+                        title={c.name + (c.preferred ? ' ★' : '')}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="cart-item-controls">
+                <button className="qty-btn" onClick={() => onQuantityChange(item.cartKey, item.qty - 1)}>−</button>
+                <span className="qty-value">{item.qty}</span>
+                <button className="qty-btn" onClick={() => onQuantityChange(item.cartKey, item.qty + 1)}>+</button>
+              </div>
+              <span className="cart-item-price">€{(item.price * item.qty).toFixed(2)}</span>
+              <button className="cart-remove" onClick={() => onRemove(item.cartKey)}>✕</button>
+            </li>
+          );
+        })}
       </ul>
       <div className="cart-total">
         <span>Totale</span>

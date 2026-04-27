@@ -5,18 +5,59 @@ const initial = { nome: '', cognome: '', cellulare: '', email: '', sede: '' };
 
 function validate(f) {
   const e = {};
-  if (!f.nome.trim())     e.nome     = 'Campo obbligatorio';
-  if (!f.cognome.trim())  e.cognome  = 'Campo obbligatorio';
+  if (!f.nome.trim())     e.nome      = 'Campo obbligatorio';
+  if (!f.cognome.trim())  e.cognome   = 'Campo obbligatorio';
   if (!f.cellulare.trim()) e.cellulare = 'Campo obbligatorio';
   else if (!/^[-\d\s+]{6,15}$/.test(f.cellulare)) e.cellulare = 'Numero non valido';
-  if (!f.email.trim())    e.email    = 'Campo obbligatorio';
+  if (!f.email.trim())    e.email     = 'Campo obbligatorio';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Email non valida';
-  if (!f.sede)            e.sede     = 'Seleziona la sede';
+  if (!f.sede)            e.sede      = 'Seleziona la sede';
   return e;
 }
 
+function buildMailtoUrl(customer, items, total) {
+  const date = new Date().toLocaleString('it-IT', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+
+  const subject = `Nuovo ordine iPhone — ${customer.nome} ${customer.cognome} — Sede ${customer.sede}`;
+
+  const itemLines = items.map((item, i) => {
+    const colorStr = (item.colors || [])
+      .map(c => c === item.preferredColor ? `${c} ★ (preferito)` : c)
+      .join(', ');
+    const lines = [
+      `${i + 1}. ${item.model}  ${item.storage}${item.isNew ? ' (NUOVO)' : ''}  x${item.qty}  →  €${(item.price * item.qty).toFixed(2)}`,
+    ];
+    if (colorStr) lines.push(`   Colori: ${colorStr}`);
+    return lines.join('\n');
+  });
+
+  const body = [
+    'NUOVO ORDINE — iPhone Ricondizionati',
+    `Data: ${date}`,
+    '',
+    'DATI CLIENTE',
+    `Nome e Cognome: ${customer.nome} ${customer.cognome}`,
+    `Cellulare: ${customer.cellulare}`,
+    `Email cliente: ${customer.email}`,
+    `Sede: ${customer.sede}`,
+    '',
+    'PRODOTTI ORDINATI',
+    '─────────────────────────────────',
+    ...itemLines,
+    '─────────────────────────────────',
+    `TOTALE: €${total.toFixed(2)}`,
+    '',
+    'Inviato tramite app ordini iPhone Ricondizionati',
+  ].join('\n');
+
+  return `mailto:caly92@live.it?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 export default function OrderForm({ cartItems, onOrderComplete }) {
-  const [form, setForm] = useState(initial);
+  const [form, setForm]     = useState(initial);
   const [errors, setErrors] = useState({});
 
   const total = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
@@ -31,6 +72,7 @@ export default function OrderForm({ cartItems, onOrderComplete }) {
     e.preventDefault();
     const errs = validate(form);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    window.location.href = buildMailtoUrl(form, cartItems, total);
     onOrderComplete({ customer: form, items: cartItems, total });
   }
 
@@ -68,22 +110,31 @@ export default function OrderForm({ cartItems, onOrderComplete }) {
       <h2 className="section-title" style={{ marginTop: 8 }}>Riepilogo Ordine</h2>
 
       <div className="form-summary">
-        {cartItems.map(item => (
-          <div key={item.cartKey} className="summary-line">
-            <span>
-              {item.model} {item.storage}
-              {item.color ? ` · ${item.color.name}` : ''}
-              {item.isNew ? ' (NUOVO)' : ''}
-              {' × '}{item.qty}
-            </span>
-            <span>€{(item.price * item.qty).toFixed(2)}</span>
-          </div>
-        ))}
+        {cartItems.map(item => {
+          const colorStr = (item.colors || [])
+            .map(c => c === item.preferredColor ? `${c} ★` : c)
+            .join(', ');
+          return (
+            <div key={item.cartKey} className="summary-line" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>{item.model} {item.storage}{item.isNew ? ' (NUOVO)' : ''} × {item.qty}</span>
+                <span>€{(item.price * item.qty).toFixed(2)}</span>
+              </div>
+              {colorStr && (
+                <span style={{ fontSize: 11, color: '#6e6e73', marginTop: 2 }}>{colorStr}</span>
+              )}
+            </div>
+          );
+        })}
         <div className="summary-total">
           <span>Totale</span>
           <span>€{total.toFixed(2)}</span>
         </div>
       </div>
+
+      <p className="email-notice">
+        📧 Al conferma si aprirà il tuo client di posta con l'ordine pronto da inviare a <strong>caly92@live.it</strong>
+      </p>
 
       <button type="submit" className="btn-submit">Conferma Ordine →</button>
     </form>

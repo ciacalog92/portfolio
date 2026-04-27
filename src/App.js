@@ -10,7 +10,8 @@ export default function App() {
   const [completedOrder, setCompletedOrder] = useState(null);
 
   function handleAdd(phone) {
-    const cartKey = `${phone.id}-${phone.color?.name || ''}`;
+    const colorKey = (phone.colors || []).slice().sort().join('|') || 'none';
+    const cartKey  = `${phone.id}-${colorKey}`;
     setCartItems(prev => {
       const existing = prev.find(i => i.cartKey === cartKey);
       if (existing) return prev.map(i => i.cartKey === cartKey ? { ...i, qty: i.qty + 1 } : i);
@@ -120,16 +121,22 @@ export default function App() {
               <p>Cellulare: <strong>{completedOrder.customer.cellulare}</strong></p>
 
               <div className="done-items">
-                {completedOrder.items.map(item => (
-                  <div key={item.cartKey} className="done-item-line">
-                    <span>
-                      {item.model} {item.storage}
-                      {item.color ? ` · ${item.color.name}` : ''}
-                      {' × '}{item.qty}
-                    </span>
-                    <span>€{(item.price * item.qty).toFixed(2)}</span>
-                  </div>
-                ))}
+                {completedOrder.items.map(item => {
+                  const colorStr = (item.colors || [])
+                    .map(c => c === item.preferredColor ? `${c} ★` : c)
+                    .join(', ');
+                  return (
+                    <div key={item.cartKey} className="done-item-line">
+                      <span>
+                        {item.model} {item.storage}
+                        {item.isNew ? ' (NUOVO)' : ''}
+                        {' × '}{item.qty}
+                        {colorStr && <><br /><small style={{ color: '#6e6e73' }}>{colorStr}</small></>}
+                      </span>
+                      <span>€{(item.price * item.qty).toFixed(2)}</span>
+                    </div>
+                  );
+                })}
                 <div className="done-total">
                   <span>Totale</span>
                   <span>€{completedOrder.total.toFixed(2)}</span>
