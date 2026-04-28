@@ -3,6 +3,7 @@ import './App.css';
 import Catalog from './components/Catalog';
 import Cart from './components/Cart';
 import OrderForm from './components/OrderForm';
+import BrandAssets from './components/BrandAssets';
 
 export default function App() {
   const [cartItems, setCartItems] = useState([]);
@@ -66,6 +67,9 @@ export default function App() {
                   Ordine
                   {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
                 </button>
+                <button className={`nav-btn ${step === 'brand' ? 'active' : ''}`} onClick={() => setStep('brand')}>
+                  Brand
+                </button>
               </>
             )}
             {step === 'done' && (
@@ -107,6 +111,8 @@ export default function App() {
             </aside>
           </div>
         )}
+
+        {step === 'brand' && <BrandAssets />}
 
         {step === 'done' && completedOrder && (
           <div className="done-layout">
