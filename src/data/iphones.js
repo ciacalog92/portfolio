@@ -237,16 +237,14 @@ export const modelColors = {
     { name: "Verde Menta", hex: "#a8c4b0" },
   ],
   "iPhone 17 Pro": [
-    { name: "Titanio Nero",     hex: "#3a3530" },
-    { name: "Titanio Bianco",   hex: "#f5f1eb" },
-    { name: "Titanio Naturale", hex: "#c8b8a2", preferred: true },
-    { name: "Cosmic Orange",    hex: "#c8622a" },
+    { name: "Blu Profondo",     hex: "#1a3a5c", preferred: true },
+    { name: "Arancione Cosmico", hex: "#c8622a" },
+    { name: "Silver",           hex: "#e8e8e8" },
   ],
   "iPhone 17 Pro Max": [
-    { name: "Titanio Nero",     hex: "#3a3530" },
-    { name: "Titanio Bianco",   hex: "#f5f1eb" },
-    { name: "Titanio Naturale", hex: "#c8b8a2", preferred: true },
-    { name: "Cosmic Orange",    hex: "#c8622a" },
+    { name: "Blu Profondo",     hex: "#1a3a5c", preferred: true },
+    { name: "Arancione Cosmico", hex: "#c8622a" },
+    { name: "Silver",           hex: "#e8e8e8" },
   ],
 };
 
