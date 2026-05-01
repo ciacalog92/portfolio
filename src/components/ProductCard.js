@@ -1,13 +1,215 @@
 import React, { useState } from 'react';
 import { modelColors, modelSpecs, modelImageUrl } from '../data/iphones';
 
-// Wraps PhoneShape with a real <img> overlay; img stays hidden until it loads,
-// so a missing file (404) leaves the SVG visible underneath.
+/* ── Lens helper ── */
+function Lens({ cx, cy, r }) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r}       fill="#2a2a2e" />
+      <circle cx={cx} cy={cy} r={r * .82} fill="#141418" />
+      <circle cx={cx} cy={cy} r={r * .62} fill="#08080c" />
+      <circle cx={cx} cy={cy} r={r * .4}  fill="#000" />
+      {/* blue-purple tint */}
+      <circle cx={cx + r*.22} cy={cy + r*.18} r={r*.22} fill="rgba(80,120,220,.45)" />
+      {/* highlight arc top-left */}
+      <circle cx={cx - r*.28} cy={cy - r*.28} r={r*.16} fill="rgba(255,255,255,.3)" />
+    </g>
+  );
+}
+
+/* ── Flash helper ── */
+function Flash({ cx, cy, r = 10 }) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r}      fill="#1c1c1e" />
+      <circle cx={cx} cy={cy} r={r * .6} fill="#2a2000" />
+      <circle cx={cx} cy={cy} r={r * .4} fill="#ffd000" opacity=".75" />
+    </g>
+  );
+}
+
+/* ── Back-view SVG render ── */
+function PhoneBackSVG({ model, colorHex }) {
+  const fill = colorHex || '#d1d1d6';
+  const uid  = `bk${model.replace(/\W/g, '').slice(-10)}`;
+
+  const isSE  = model.includes('SE');
+  const isPro = model.includes('Pro');
+  const num   = parseInt(model.match(/iPhone (\d+)/)?.[1] || '0');
+
+  // Camera configuration
+  let cam;
+  if (isSE)                    cam = model.includes('2020') ? 'se20' : 'se22';
+  else if (num === 17 && isPro) cam = 'bar_pro';
+  else if (num === 17)          cam = 'bar_std';
+  else if (isPro)               cam = 'triple';
+  else if (num >= 14)           cam = 'dual_v';
+  else                          cam = 'dual_d';
+
+  // Darker tint for bump
+  const rr = parseInt(fill.slice(1, 3), 16) || 180;
+  const gg = parseInt(fill.slice(3, 5), 16) || 180;
+  const bb = parseInt(fill.slice(5, 7), 16) || 180;
+  const lum = (0.299 * rr + 0.587 * gg + 0.114 * bb) / 255;
+  const isLight = lum > 0.55;
+  const bumpFill = `rgb(${Math.max(0,rr-26)},${Math.max(0,gg-26)},${Math.max(0,bb-26)})`;
+  const logoColor = isLight ? 'rgba(0,0,0,.32)' : 'rgba(255,255,255,.42)';
+
+  // Bump geometry
+  const bumps = {
+    triple:   { x: 22, y: 14, w: 132, h: 132, rx: 28 },
+    dual_v:   { x: 22, y: 14, w: 110, h: 120, rx: 24 },
+    dual_d:   { x: 22, y: 14, w: 112, h: 112, rx: 24 },
+    se22:     { x: 30, y: 18, w:  86, h:  86, rx: 20 },
+    bar_pro:  { x: 16, y: 14, w: 268, h:  76, rx: 34 },
+    bar_std:  { x: 16, y: 14, w: 268, h:  68, rx: 30 },
+  };
+
+  const bump = bumps[cam];
+
+  // Camera lenses inside bump
+  function renderLenses() {
+    switch (cam) {
+      case 'triple':
+        return <>
+          <Lens cx={70}  cy={58}  r={24} />   {/* wide */}
+          <Lens cx={110} cy={47}  r={21} />   {/* tele */}
+          <Lens cx={84}  cy={96}  r={21} />   {/* ultra-wide */}
+          <Flash cx={118} cy={97} r={10} />
+          <circle cx={104} cy={115} r={6} fill="#200830" />{/* LiDAR */}
+          <circle cx={104} cy={115} r={3.5} fill="#3a1060" opacity=".8" />
+        </>;
+      case 'dual_v':
+        return <>
+          <Lens cx={72} cy={55}  r={22} />    {/* wide */}
+          <Lens cx={72} cy={94}  r={20} />    {/* ultra-wide */}
+          <Flash cx={100} cy={74} r={10} />
+        </>;
+      case 'dual_d':
+        return <>
+          <Lens cx={84}  cy={48} r={22} />    {/* wide */}
+          <Lens cx={55}  cy={82} r={20} />    {/* ultra-wide */}
+          <Flash cx={92} cy={86} r={10} />
+        </>;
+      case 'se22':
+        return <>
+          <Lens cx={73} cy={69} r={28} />
+          <Flash cx={105} cy={48} r={9} />
+        </>;
+      case 'se20':
+        return <Lens cx={150} cy={72} r={36} />;
+      case 'bar_pro':
+        return <>
+          <Lens cx={66}  cy={52} r={24} />    {/* wide */}
+          <Lens cx={120} cy={52} r={22} />    {/* tele */}
+          <Lens cx={93}  cy={52} r={18} />    {/* ultra-wide (small, between) */}
+          <Flash cx={175} cy={42} r={11} />
+          <circle cx={175} cy={62} r={6}   fill="#200830" />
+          <circle cx={175} cy={62} r={3.5} fill="#3a1060" opacity=".8" />
+        </>;
+      case 'bar_std':
+        return <>
+          <Lens cx={70}  cy={48} r={22} />    {/* wide */}
+          <Lens cx={120} cy={48} r={20} />    {/* ultra-wide */}
+          <Flash cx={165} cy={48} r={10} />
+        </>;
+      default: return null;
+    }
+  }
+
+  // Apple logo path (Material Design reference, 24×24 units)
+  // Centered at (150, 300) via translate(102, 252) scale(4)
+  const applePath = "M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z";
+
+  return (
+    <svg
+      viewBox="0 0 300 600"
+      width="88"
+      height="176"
+      style={{ display: 'block', filter: 'drop-shadow(0 10px 28px rgba(0,0,0,.30))' }}
+      aria-hidden="true"
+    >
+      <defs>
+        {/* Body gloss */}
+        <linearGradient id={`${uid}bd`} x1=".15" y1="0" x2=".85" y2="1">
+          <stop offset="0%"   stopColor="rgba(255,255,255,.28)" />
+          <stop offset="45%"  stopColor="rgba(255,255,255,.04)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,.22)" />
+        </linearGradient>
+        {/* Left edge highlight */}
+        <linearGradient id={`${uid}el`} x1="0" y1=".5" x2="1" y2=".5">
+          <stop offset="0%"   stopColor="rgba(255,255,255,.50)" />
+          <stop offset="8%"   stopColor="rgba(255,255,255,.12)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </linearGradient>
+        {/* Right edge shadow */}
+        <linearGradient id={`${uid}er`} x1="0" y1=".5" x2="1" y2=".5">
+          <stop offset="0%"   stopColor="rgba(0,0,0,0)" />
+          <stop offset="88%"  stopColor="rgba(0,0,0,.08)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,.26)" />
+        </linearGradient>
+        {/* Bump gloss */}
+        <linearGradient id={`${uid}bp`} x1=".2" y1=".2" x2=".8" y2=".8">
+          <stop offset="0%"   stopColor="rgba(255,255,255,.18)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,.16)" />
+        </linearGradient>
+      </defs>
+
+      {/* ── Side buttons ── */}
+      {/* Action button */}
+      <rect x="1" y="68"  width="11" height="28" rx="5" fill={fill} stroke="rgba(0,0,0,.28)" strokeWidth="1.5" />
+      {/* Vol up */}
+      <rect x="1" y="108" width="11" height="48" rx="5" fill={fill} stroke="rgba(0,0,0,.28)" strokeWidth="1.5" />
+      {/* Vol down */}
+      <rect x="1" y="166" width="11" height="48" rx="5" fill={fill} stroke="rgba(0,0,0,.28)" strokeWidth="1.5" />
+      {/* Power */}
+      <rect x="288" y="132" width="11" height="58" rx="5" fill={fill} stroke="rgba(0,0,0,.28)" strokeWidth="1.5" />
+
+      {/* ── Phone body ── */}
+      <rect x="12" y="8"  width="276" height="584" rx="66" fill={fill} />
+      <rect x="12" y="8"  width="276" height="584" rx="66" fill={`url(#${uid}bd)`} />
+      <rect x="12" y="8"  width="276" height="584" rx="66" fill={`url(#${uid}el)`} />
+      <rect x="12" y="8"  width="276" height="584" rx="66" fill={`url(#${uid}er)`} />
+      {/* Outer edge ring */}
+      <rect x="12" y="8"  width="276" height="584" rx="66" fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="2.5" />
+      <rect x="13" y="9"  width="274" height="582" rx="65" fill="none" stroke="rgba(0,0,0,.30)"       strokeWidth="1.2" />
+
+      {/* ── Camera bump ── */}
+      {bump && (
+        <>
+          <rect x={bump.x} y={bump.y} width={bump.w} height={bump.h} rx={bump.rx}
+                fill={bumpFill} />
+          <rect x={bump.x} y={bump.y} width={bump.w} height={bump.h} rx={bump.rx}
+                fill={`url(#${uid}bp)`} />
+          <rect x={bump.x} y={bump.y} width={bump.w} height={bump.h} rx={bump.rx}
+                fill="none" stroke="rgba(0,0,0,.28)" strokeWidth="1.2" />
+        </>
+      )}
+
+      {/* ── Camera lenses ── */}
+      {renderLenses()}
+
+      {/* ── Apple logo ── */}
+      <g transform="translate(102, 252) scale(4)" fill={logoColor}>
+        <path d={applePath} />
+      </g>
+
+      {/* ── Bottom port ── */}
+      <rect x="126" y="577" width="48" height="12" rx="6" fill="rgba(0,0,0,.16)" />
+      <circle cx="104" cy="583" r="4"  fill="rgba(0,0,0,.14)" />
+      <circle cx="196" cy="583" r="4"  fill="rgba(0,0,0,.14)" />
+      <circle cx="90"  cy="583" r="2.5" fill="rgba(0,0,0,.10)" />
+      <circle cx="210" cy="583" r="2.5" fill="rgba(0,0,0,.10)" />
+    </svg>
+  );
+}
+
+/* ── Phone preview: SVG back render + optional real-photo overlay ── */
 function PhonePreview({ model, colorHex }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   return (
-    <div className="pc2-phone-wrap">
-      <PhoneShape model={model} colorHex={colorHex} />
+    <div className="pc2-phone-wrap" style={{ width: 88, height: 176 }}>
+      <PhoneBackSVG model={model} colorHex={colorHex} />
       <img
         src={modelImageUrl(model)}
         alt={model}
@@ -16,134 +218,6 @@ function PhonePreview({ model, colorHex }) {
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
       />
     </div>
-  );
-}
-
-function PhoneShape({ model, colorHex }) {
-  const isSE  = model.includes('SE');
-  const isPro = model.includes('Pro');
-  const year  = parseInt(model.match(/iPhone (\d+)/)?.[1] || '0');
-  const hasDI = !isSE && ((year === 14 && isPro) || year >= 15);
-  const fill  = colorHex || '#e5e5ea';
-  // short unique id for gradient refs (no spaces/special chars)
-  const uid   = `p${model.replace(/\W/g, '')}`;
-  const yBar  = hasDI ? 28 : isSE ? 17 : 22;
-  const yTime = hasDI ? 58 : isSE ? 44 : 50;
-
-  return (
-    <svg
-      viewBox="0 0 80 164"
-      width="76"
-      height="155"
-      style={{ display: 'block', filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.26))' }}
-      aria-hidden="true"
-    >
-      <defs>
-        {/* Body shine: bright top-left → dark bottom-right */}
-        <linearGradient id={`${uid}bg`} x1="0.1" y1="0" x2="0.9" y2="1.3">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.48)" />
-          <stop offset="30%"  stopColor="rgba(255,255,255,0.06)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0.20)" />
-        </linearGradient>
-        {/* iOS wallpaper gradient */}
-        <linearGradient id={`${uid}sc`} x1="0.4" y1="0" x2="0.6" y2="1">
-          <stop offset="0%"   stopColor="#1b2f58" />
-          <stop offset="55%"  stopColor="#0d1530" />
-          <stop offset="100%" stopColor="#060912" />
-        </linearGradient>
-        {/* Left-edge screen shimmer */}
-        <linearGradient id={`${uid}sh`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.16)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-        </linearGradient>
-        <clipPath id={`${uid}cl`}>
-          <rect x="6" y="9" width="68" height="146" rx="10" />
-        </clipPath>
-      </defs>
-
-      {/* ── Side buttons (behind body, peek out) ── */}
-      {/* Left: volume up */}
-      <rect x="1" y="42" width="5" height="17" rx="2" fill={fill} stroke="rgba(0,0,0,0.22)" strokeWidth="0.8" />
-      {/* Left: volume down */}
-      <rect x="1" y="63" width="5" height="17" rx="2" fill={fill} stroke="rgba(0,0,0,0.22)" strokeWidth="0.8" />
-      {/* Left: mute / action button */}
-      <rect x="1" y="27" width="5" height="11" rx="2" fill={fill} stroke="rgba(0,0,0,0.22)" strokeWidth="0.8" />
-      {/* Right: power */}
-      <rect x="74" y="50" width="5" height="24" rx="2" fill={fill} stroke="rgba(0,0,0,0.22)" strokeWidth="0.8" />
-
-      {/* ── Phone body ── */}
-      <rect x="4" y="2"  width="72" height="160" rx="19" fill={fill} />
-      <rect x="4" y="2"  width="72" height="160" rx="19" fill={`url(#${uid}bg)`} />
-      <rect x="4" y="2"  width="72" height="160" rx="19" fill="none" stroke="rgba(0,0,0,0.22)" strokeWidth="1.2" />
-
-      {/* ── Screen bezel ── */}
-      <rect x="5.5" y="8.5" width="69" height="147" rx="11" fill="#04070e" />
-
-      {/* ── Screen content ── */}
-      <rect x="6" y="9" width="68" height="146" rx="10" fill={`url(#${uid}sc)`} />
-      {/* Left-edge shimmer over screen */}
-      <rect x="6" y="9" width="34" height="146" rx="10" fill={`url(#${uid}sh)`} clipPath={`url(#${uid}cl)`} />
-
-      {/* ── Top hardware ── */}
-      {isSE ? (
-        <>
-          {/* Ear speaker pill */}
-          <rect x="27" y="3.5" width="26" height="5" rx="2.5" fill="rgba(0,0,0,0.24)" />
-          {/* Front camera */}
-          <circle cx="64" cy="6" r="2.8" fill="rgba(0,0,0,0.2)" />
-        </>
-      ) : hasDI ? (
-        /* Dynamic Island */
-        <rect x="25.5" y="13.5" width="29" height="11" rx="5.5" fill="#04070e" />
-      ) : (
-        /* Notch */
-        <rect x="20" y="9" width="40" height="8" rx="4" fill="#04070e" />
-      )}
-
-      {/* ── Status bar ── */}
-      {/* Signal dots */}
-      <circle cx="13" cy={yBar} r="1.6" fill="rgba(255,255,255,0.35)" />
-      <circle cx="17" cy={yBar} r="1.6" fill="rgba(255,255,255,0.35)" />
-      <circle cx="21" cy={yBar} r="1.6" fill="rgba(255,255,255,0.35)" />
-      {/* Battery bar */}
-      <rect x="55" y={yBar - 3.5} width="16" height="7" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-      <rect x="56" y={yBar - 2.5} width="11" height="5" rx="1" fill="rgba(255,255,255,0.35)" />
-      <rect x="71" y={yBar - 1.5} width="2" height="3" rx="1" fill="rgba(255,255,255,0.3)" />
-
-      {/* ── Clock (Apple's iconic 9:41) ── */}
-      <text
-        x="40" y={yTime}
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.92)"
-        fontSize="14"
-        fontWeight="200"
-        fontFamily="-apple-system, SF Pro Display, Helvetica Neue, sans-serif"
-        letterSpacing="-0.5"
-      >
-        9:41
-      </text>
-
-      {/* ── Bottom elements ── */}
-      {isSE ? (
-        /* Home button */
-        <>
-          <circle cx="40" cy="150" r="9"   fill="none" stroke={fill}              strokeWidth="2"   />
-          <circle cx="40" cy="150" r="6.5" fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="1.2" />
-          <circle cx="40" cy="150" r="2"   fill="rgba(0,0,0,0.1)" />
-        </>
-      ) : (
-        /* Home indicator pill */
-        <rect x="28" y="148" width="24" height="4" rx="2" fill="rgba(255,255,255,0.52)" />
-      )}
-
-      {/* Bottom port */}
-      <rect x="34" y="160" width="12" height="4" rx="2" fill="rgba(0,0,0,0.18)" />
-      {/* Speaker grille dots */}
-      <circle cx="22" cy="162" r="1.3" fill="rgba(0,0,0,0.22)" />
-      <circle cx="26" cy="162" r="1.3" fill="rgba(0,0,0,0.22)" />
-      <circle cx="54" cy="162" r="1.3" fill="rgba(0,0,0,0.22)" />
-      <circle cx="58" cy="162" r="1.3" fill="rgba(0,0,0,0.22)" />
-    </svg>
   );
 }
 
@@ -202,7 +276,6 @@ export default function ProductCard({ group, onAdd }) {
       className={`product-card2${isOnRequest ? ' on-request' : ''}`}
       style={{ '--card-accent': accentHex }}
     >
-      {/* Header: phone preview + model info */}
       <div className="pc2-header">
         <div className="pc2-phone">
           <PhonePreview model={model} colorHex={accentHex} />
@@ -220,16 +293,16 @@ export default function ProductCard({ group, onAdd }) {
               <div className="pc2-specs">
                 <span className="pc2-spec" title="Display">📱 {specs.display}</span>
                 <span className="pc2-spec" title="Chip">⚡ {specs.chip}</span>
-                <span className="pc2-spec" title="Fotocamera posteriore">📷 {specs.rearCam}</span>
+                <span className="pc2-spec" title="Fotocamera">📷 {specs.rearCam}</span>
               </div>
               <div className="pc2-specs">
                 <span className="pc2-spec" title="Batteria">🔋 {specs.battery}</span>
                 <span className="pc2-spec" title="Connettore">🔌 {specs.connector}</span>
-                <span className="pc2-spec" title="Sblocco">{specs.biometric === 'Face ID' ? '😀' : '👆'} {specs.biometric}</span>
-                {specs.fiveG && <span className="pc2-spec pc2-spec-on">5G</span>}
-                {specs.promotion && <span className="pc2-spec pc2-spec-on">ProMotion 120Hz</span>}
+                <span className="pc2-spec">{specs.biometric === 'Face ID' ? '😀' : '👆'} {specs.biometric}</span>
+                {specs.fiveG       && <span className="pc2-spec pc2-spec-on">5G</span>}
+                {specs.promotion   && <span className="pc2-spec pc2-spec-on">ProMotion 120Hz</span>}
                 {specs.intelligence && <span className="pc2-spec pc2-spec-on">Apple Intelligence</span>}
-                <span className="pc2-spec" title="Anno di lancio">📅 {specs.year}</span>
+                <span className="pc2-spec">📅 {specs.year}</span>
               </div>
             </>
           )}
@@ -246,7 +319,6 @@ export default function ProductCard({ group, onAdd }) {
         </div>
       </div>
 
-      {/* Color picker: up to 3, 1× select, 2× set preferred */}
       {colors.length > 0 && (
         <div className="pc2-color-section">
           <div className="pc2-color-header">
@@ -285,7 +357,6 @@ export default function ProductCard({ group, onAdd }) {
         </div>
       )}
 
-      {/* Storage selector */}
       <div className="pc2-storage-section">
         <span className="pc2-section-title">Memoria</span>
         <div className="pc2-chips">
