@@ -277,17 +277,17 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(0,0,0,0.22);
+  background: rgba(0,0,0,0.20);
 }
 .pc2-swatch.selected {
-  box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px rgba(0,0,0,0.3);
-  transform: scale(1.06);
+  box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #1d1d1f;
+  transform: scale(1.08);
 }
-/* Preferred: blue outer ring */
+/* Preferred: dark ring (same neutral as selected) */
 .pc2-swatch.preferred {
-  box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #0071e3;
+  box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #1d1d1f;
 }
-.pc2-swatch.preferred::before { background: rgba(0,0,0,0.18); }
+.pc2-swatch.preferred::before { background: rgba(0,0,0,0.15); }
 .pc2-swatch.disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
 .swatch-icon {
@@ -297,9 +297,9 @@ body {
   color: #fff;
   line-height: 1;
   pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.55);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
-.pc2-swatch.preferred .swatch-icon { color: #ffe600; font-size: 14px; }
+.pc2-swatch.preferred .swatch-icon { color: #fff; font-size: 13px; }
 
 /* Selected color chips displayed below swatches */
 .pc2-selected-colors { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
@@ -313,9 +313,9 @@ body {
   white-space: nowrap;
 }
 .pc2-sel-chip.preferred {
-  background: #e8f1fc;
-  color: #0071e3;
-  border-color: #b3d0f5;
+  background: #1d1d1f;
+  color: #fff;
+  border-color: #1d1d1f;
   font-weight: 600;
 }
 
@@ -342,9 +342,9 @@ body {
 }
 .pc2-chip:active { transform: scale(0.97); }
 .pc2-chip.selected {
-  border-color: var(--card-accent, #0071e3);
-  background: var(--card-accent, #0071e3);
-  box-shadow: 0 2px 10px rgba(0,113,227,0.22);
+  border-color: #1d1d1f;
+  background: #1d1d1f;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 .pc2-chip-storage { font-weight: 700; color: #1d1d1f; font-size: 13px; }
 .pc2-chip-price   { color: #6e6e73; font-size: 11px; }

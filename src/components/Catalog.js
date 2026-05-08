@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { iphones, modelImageUrl } from '../data/iphones';
+import { iphones } from '../data/iphones';
 import ProductCard from './ProductCard';
 
-const HERO_MODEL = 'iPhone 16 Pro Max';
+const HERO_IMG = `${process.env.PUBLIC_URL || '.'}/images/iphone-card.png`;
 
 export default function Catalog({ onAdd }) {
   const [search, setSearch] = useState('');
@@ -32,8 +32,8 @@ export default function Catalog({ onAdd }) {
       {/* ── Hero banner ── */}
       <div className="catalog-hero">
         <img
-          src={modelImageUrl(HERO_MODEL)}
-          alt={HERO_MODEL}
+          src={HERO_IMG}
+          alt="iPhone Ricondizionati"
           className="hero-img"
         />
         <div className="hero-content">
