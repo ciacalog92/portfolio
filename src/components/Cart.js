@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { modelColors } from '../data/iphones';
 
-export default function Cart({ items, onRemove, onQuantityChange }) {
+export default function Cart({ items, onRemove, onQuantityChange, cartPulse }) {
+  const [bounce, setBounce] = useState(false);
+  useEffect(() => {
+    if (!cartPulse) return;
+    setBounce(true);
+    const t = setTimeout(() => setBounce(false), 450);
+    return () => clearTimeout(t);
+  }, [cartPulse]);
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   if (items.length === 0) {
     return (
-      <div className="cart-empty">
+      <div className={`cart-empty${bounce ? ' cart--bounce' : ''}`}>
         <span className="cart-empty-icon">🛒</span>
         <p>Nessun prodotto selezionato</p>
         <p className="cart-empty-sub">Configura un modello e aggiungilo all'ordine</p>
@@ -15,7 +22,7 @@ export default function Cart({ items, onRemove, onQuantityChange }) {
   }
 
   return (
-    <div className="cart">
+    <div className={`cart${bounce ? ' cart--bounce' : ''}`}>
       <h3 className="cart-title">Ordine in corso</h3>
       <ul className="cart-list">
         {items.map(item => {

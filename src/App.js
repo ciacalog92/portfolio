@@ -8,6 +8,7 @@ export default function App() {
   const [cartItems, setCartItems] = useState([]);
   const [step, setStep] = useState('catalog');
   const [completedOrder, setCompletedOrder] = useState(null);
+  const [cartPulse, setCartPulse] = useState(0);
 
   function handleAdd(phone) {
     const colorKey = (phone.colors || []).slice().sort().join('|') || 'none';
@@ -17,6 +18,7 @@ export default function App() {
       if (existing) return prev.map(i => i.cartKey === cartKey ? { ...i, qty: i.qty + 1 } : i);
       return [...prev, { ...phone, cartKey, qty: 1 }];
     });
+    setCartPulse(n => n + 1);
   }
 
   function handleRemove(cartKey) {
@@ -64,7 +66,7 @@ export default function App() {
                   disabled={cartCount === 0}
                 >
                   Ordine
-                  {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+                  {cartCount > 0 && <span key={cartPulse} className="cart-badge cart-badge--pop">{cartCount}</span>}
                 </button>
               </>
             )}
@@ -83,7 +85,7 @@ export default function App() {
             </div>
             <aside className="cart-col">
               <div className="cart-sticky">
-                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} />
+                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} cartPulse={cartPulse} />
                 {cartItems.length > 0 && (
                   <button className="btn-checkout" onClick={() => setStep('checkout')}>
                     Procedi all'ordine →
@@ -101,7 +103,7 @@ export default function App() {
             </div>
             <aside className="cart-col">
               <div className="cart-sticky">
-                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} />
+                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} cartPulse={cartPulse} />
                 <button className="btn-back" onClick={() => setStep('catalog')}>← Torna al catalogo</button>
               </div>
             </aside>
