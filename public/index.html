@@ -22,6 +22,20 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>iPhone Ricondizionati — IGroup</title>
+    <script>
+      // iOS Safari ignores user-scalable=no — block zoom via touch events
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+      (function() {
+        var last = 0;
+        document.addEventListener('touchend', function(e) {
+          var now = Date.now();
+          if (now - last < 320) e.preventDefault();
+          last = now;
+        }, false);
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
