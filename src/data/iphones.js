@@ -1,7 +1,7 @@
 // availability:
 //   'available'   → ordinabile normalmente
 //   'on-request'  → previa disponibilità (**) — contattare Daniele
-// Modelli con * (non ordinabile) sono esclusi dal listino
+//   * (non ordinabile a fornitore) → inclusi come on-request
 
 export const iphones = [
   // SE 2020
@@ -10,6 +10,15 @@ export const iphones = [
   // SE 2022
   { id: 3,  model: "iPhone SE 2022",    storage: "128GB", price: 279,  availability: "available" },
   { id: 4,  model: "iPhone SE 2022",    storage: "256GB", price: 329,  availability: "available" },
+  // 11 — non ordinabile a fornitore (*)
+  { id: 52, model: "iPhone 11",         storage: "64GB",  price: 229,  availability: "on-request" },
+  { id: 53, model: "iPhone 11",         storage: "128GB", price: 279,  availability: "on-request" },
+  // 11 Pro — non ordinabile a fornitore (*)
+  { id: 54, model: "iPhone 11 Pro",     storage: "64GB",  price: 249,  availability: "on-request" },
+  { id: 55, model: "iPhone 11 Pro",     storage: "256GB", price: 299,  availability: "on-request" },
+  // 11 Pro Max — non ordinabile a fornitore (*)
+  { id: 56, model: "iPhone 11 Pro Max", storage: "64GB",  price: 299,  availability: "on-request" },
+  { id: 57, model: "iPhone 11 Pro Max", storage: "256GB", price: 349,  availability: "on-request" },
   // 12 Mini
   { id: 5,  model: "iPhone 12 Mini",    storage: "128GB", price: 299,  availability: "available" },
   { id: 6,  model: "iPhone 12 Mini",    storage: "256GB", price: 349,  availability: "available" },
@@ -89,6 +98,26 @@ export const sedi = [
 
 // Colori ufficiali Apple per ogni modello (preferred = colore consigliato)
 export const modelColors = {
+  "iPhone 11": [
+    { name: "Nero",   hex: "#1c1c1e" },
+    { name: "Bianco", hex: "#f2f0ea", preferred: true },
+    { name: "Rosso",  hex: "#b71c1c" },
+    { name: "Viola",  hex: "#7b5ea7" },
+    { name: "Verde",  hex: "#3d6b4f" },
+    { name: "Giallo", hex: "#f5c542" },
+  ],
+  "iPhone 11 Pro": [
+    { name: "Space Gray",     hex: "#5a5a5a" },
+    { name: "Silver",         hex: "#e0e0db", preferred: true },
+    { name: "Gold",           hex: "#c5a96f" },
+    { name: "Midnight Green", hex: "#3a4f41" },
+  ],
+  "iPhone 11 Pro Max": [
+    { name: "Space Gray",     hex: "#5a5a5a" },
+    { name: "Silver",         hex: "#e0e0db", preferred: true },
+    { name: "Gold",           hex: "#c5a96f" },
+    { name: "Midnight Green", hex: "#3a4f41" },
+  ],
   "iPhone SE 2020": [
     { name: "Nero",   hex: "#1c1c1e" },
     { name: "Bianco", hex: "#f0ede6", preferred: true },
@@ -250,6 +279,9 @@ export const modelColors = {
 
 // Caratteristiche tecniche complete per ogni modello
 export const modelSpecs = {
+  "iPhone 11":         { display: '6.1" Liquid Retina HD',               chip: 'A13 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~17 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: false, promotion: false, dynamicIsland: false, intelligence: false, weight: '194 g', year: 2019 },
+  "iPhone 11 Pro":     { display: '5.8" Super Retina XDR',               chip: 'A13 Bionic',  rearCam: '12 MP Pro · 2× tele', frontCam: '12 MP TrueDepth', battery: '~18 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: false, promotion: false, dynamicIsland: false, intelligence: false, weight: '188 g', year: 2019 },
+  "iPhone 11 Pro Max": { display: '6.5" Super Retina XDR',               chip: 'A13 Bionic',  rearCam: '12 MP Pro · 2× tele', frontCam: '12 MP TrueDepth', battery: '~20 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: false, promotion: false, dynamicIsland: false, intelligence: false, weight: '226 g', year: 2019 },
   "iPhone SE 2020":    { display: '4.7" Retina HD',                chip: 'A13 Bionic',  rearCam: '12 MP',         frontCam: '7 MP',          battery: '~13 h video',   connector: 'Lightning', biometric: 'Touch ID', fiveG: false, promotion: false, dynamicIsland: false, intelligence: false, weight: '148 g', year: 2020 },
   "iPhone SE 2022":    { display: '4.7" Retina HD',                chip: 'A15 Bionic',  rearCam: '12 MP',         frontCam: '7 MP',          battery: '~15 h video',   connector: 'Lightning', biometric: 'Touch ID', fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '144 g', year: 2022 },
   "iPhone 12 Mini":    { display: '5.4" Super Retina XDR',         chip: 'A14 Bionic',  rearCam: '12 MP Dual',    frontCam: '12 MP TrueDepth', battery: '~15 h video', connector: 'Lightning', biometric: 'Face ID',  fiveG: true,  promotion: false, dynamicIsland: false, intelligence: false, weight: '133 g', year: 2020 },
