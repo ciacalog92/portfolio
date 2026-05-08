@@ -73,7 +73,7 @@ function buildMailtoUrl(customer, items, total, bundle) {
     'Inviato tramite app ordini iPhone Ricondizionati',
   ].join('\n');
 
-  return `mailto:caly92@live.it?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:ordiniricondizionatigroupsrl@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 export default function OrderForm({ cartItems, onOrderComplete }) {
@@ -204,7 +204,7 @@ export default function OrderForm({ cartItems, onOrderComplete }) {
       </div>
 
       <p className="email-notice">
-        📧 Alla conferma si aprirà il tuo client di posta con l'ordine pronto da inviare a <strong>caly92@live.it</strong>
+        📧 Alla conferma si aprirà il tuo client di posta con l'ordine pronto da inviare a <strong>ordiniricondizionatigroupsrl@gmail.com</strong>
       </p>
 
       <button type="submit" className="btn-submit">Conferma Ordine →</button>
