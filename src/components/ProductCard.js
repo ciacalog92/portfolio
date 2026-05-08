@@ -1,119 +1,21 @@
 import React, { useState } from 'react';
-import { modelColors, modelSpecs, modelImageUrl } from '../data/iphones';
+import { modelColors, modelSpecs } from '../data/iphones';
 
-/* ─────────────────────────────────────────────
-   PhoneIcon — single professional icon,
-   identical for all models.
-   Front-view silhouette, editorial style.
-───────────────────────────────────────────── */
-function PhoneIcon() {
-  return (
-    <svg
-      viewBox="0 0 88 176"
-      width="88"
-      height="176"
-      style={{ display: 'block', filter: 'drop-shadow(0 8px 24px rgba(0,0,0,.28))' }}
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id="pi-screen" x1=".4" y1="0" x2=".6" y2="1">
-          <stop offset="0%"   stopColor="#1e3a6e" />
-          <stop offset="55%"  stopColor="#0b1630" />
-          <stop offset="100%" stopColor="#04080f" />
-        </linearGradient>
-        <linearGradient id="pi-body" x1=".12" y1="0" x2=".88" y2="1">
-          <stop offset="0%"   stopColor="rgba(255,255,255,.10)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,.14)" />
-        </linearGradient>
-        <linearGradient id="pi-shimmer" x1="0" y1=".5" x2="1" y2=".5">
-          <stop offset="0%"   stopColor="rgba(255,255,255,.18)" />
-          <stop offset="12%"  stopColor="rgba(255,255,255,.04)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-        </linearGradient>
-      </defs>
+const CARD_IMG = `${process.env.PUBLIC_URL || '.'}/images/iphone-card.png`;
 
-      {/* Side buttons */}
-      <rect x="1"  y="52" width="3.5" height="11" rx="1.8" fill="#2a2a2c" />
-      <rect x="1"  y="67" width="3.5" height="20" rx="1.8" fill="#2a2a2c" />
-      <rect x="1"  y="91" width="3.5" height="20" rx="1.8" fill="#2a2a2c" />
-      <rect x="83.5" y="62" width="3.5" height="28" rx="1.8" fill="#2a2a2c" />
-
-      {/* Body */}
-      <rect x="4" y="2" width="80" height="172" rx="21" fill="#1c1c1e" />
-      <rect x="4" y="2" width="80" height="172" rx="21" fill="url(#pi-body)" />
-      <rect x="4" y="2" width="80" height="172" rx="21" fill="url(#pi-shimmer)" />
-      <rect x="4.6" y="2.6" width="78.8" height="170.8" rx="20.5"
-            fill="none" stroke="rgba(255,255,255,.10)" strokeWidth=".8" />
-
-      {/* Screen bezel */}
-      <rect x="5.5" y="3.5" width="77" height="169" rx="19.5" fill="#080808" />
-
-      {/* Screen */}
-      <rect x="6" y="4" width="76" height="168" rx="19" fill="url(#pi-screen)" />
-
-      {/* Dynamic Island */}
-      <rect x="26" y="11" width="36" height="11" rx="5.5" fill="#000" />
-
-      {/* Status bar — signal dots */}
-      <circle cx="15" cy="24" r="1.6" fill="rgba(255,255,255,.30)" />
-      <circle cx="19" cy="24" r="1.6" fill="rgba(255,255,255,.30)" />
-      <circle cx="23" cy="24" r="1.6" fill="rgba(255,255,255,.30)" />
-      {/* Battery */}
-      <rect x="63" y="20.5" width="14" height="7" rx="2"
-            fill="none" stroke="rgba(255,255,255,.28)" strokeWidth=".9" />
-      <rect x="64" y="21.5" width="9.5" height="5" rx="1"
-            fill="rgba(255,255,255,.32)" />
-      <rect x="77" y="23" width="1.8" height="3" rx=".9"
-            fill="rgba(255,255,255,.25)" />
-
-      {/* Clock */}
-      <text
-        x="44" y="50"
-        textAnchor="middle"
-        fill="rgba(255,255,255,.90)"
-        fontSize="16"
-        fontWeight="200"
-        fontFamily="-apple-system, SF Pro Display, Helvetica Neue, sans-serif"
-        letterSpacing="-0.5"
-      >
-        9:41
-      </text>
-
-      {/* App grid — 4 × 3 subtle dots suggesting home screen */}
-      {[0,1,2,3].map(col =>
-        [0,1,2].map(row => (
-          <rect
-            key={`${col}-${row}`}
-            x={18 + col * 14} y={70 + row * 20}
-            width="10" height="10" rx="2.5"
-            fill="rgba(255,255,255,.07)"
-          />
-        ))
-      )}
-
-      {/* Home indicator */}
-      <rect x="27" y="160" width="34" height="4" rx="2"
-            fill="rgba(255,255,255,.38)" />
-
-      {/* Bottom port */}
-      <rect x="35" y="170" width="18" height="3" rx="1.5"
-            fill="rgba(255,255,255,.10)" />
-    </svg>
-  );
-}
-
-/* ── Preview: icon + real-photo overlay when available ── */
-function PhonePreview({ model }) {
-  const [imgLoaded, setImgLoaded] = useState(false);
+/* ── Uniform brand image for all cards ── */
+function PhonePreview() {
   return (
     <div className="pc2-phone-wrap" style={{ width: 88, height: 176 }}>
-      <PhoneIcon />
       <img
-        src={modelImageUrl(model)}
-        alt={model}
-        className={`pc2-phone-photo${imgLoaded ? ' loaded' : ''}`}
-        onLoad={() => setImgLoaded(true)}
-        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        src={CARD_IMG}
+        alt="iPhone"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          display: 'block',
+        }}
       />
     </div>
   );
