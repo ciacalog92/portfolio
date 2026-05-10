@@ -26,6 +26,7 @@ export default function Catalog({ onAdd }) {
 
   return (
     <section className="catalog-section">
+
       <h2 className="section-title">Listino iPhone</h2>
 
       <div className="filters">

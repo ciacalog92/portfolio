@@ -8,22 +8,26 @@ export default function App() {
   const [cartItems, setCartItems] = useState([]);
   const [step, setStep] = useState('catalog');
   const [completedOrder, setCompletedOrder] = useState(null);
+  const [cartPulse, setCartPulse] = useState(0);
 
   function handleAdd(phone) {
+    const colorKey = (phone.colors || []).slice().sort().join('|') || 'none';
+    const cartKey  = `${phone.id}-${colorKey}`;
     setCartItems(prev => {
-      const existing = prev.find(i => i.id === phone.id);
-      if (existing) return prev.map(i => i.id === phone.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { ...phone, qty: 1 }];
+      const existing = prev.find(i => i.cartKey === cartKey);
+      if (existing) return prev.map(i => i.cartKey === cartKey ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { ...phone, cartKey, qty: 1 }];
     });
+    setCartPulse(n => n + 1);
   }
 
-  function handleRemove(id) {
-    setCartItems(prev => prev.filter(i => i.id !== id));
+  function handleRemove(cartKey) {
+    setCartItems(prev => prev.filter(i => i.cartKey !== cartKey));
   }
 
-  function handleQuantityChange(id, qty) {
-    if (qty <= 0) { handleRemove(id); return; }
-    setCartItems(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
+  function handleQuantityChange(cartKey, qty) {
+    if (qty <= 0) { handleRemove(cartKey); return; }
+    setCartItems(prev => prev.map(i => i.cartKey === cartKey ? { ...i, qty } : i));
   }
 
   function handleOrderComplete(order) {
@@ -62,7 +66,7 @@ export default function App() {
                   disabled={cartCount === 0}
                 >
                   Ordine
-                  {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+                  {cartCount > 0 && <span key={cartPulse} className="cart-badge cart-badge--pop">{cartCount}</span>}
                 </button>
               </>
             )}
@@ -81,7 +85,7 @@ export default function App() {
             </div>
             <aside className="cart-col">
               <div className="cart-sticky">
-                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} />
+                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} cartPulse={cartPulse} />
                 {cartItems.length > 0 && (
                   <button className="btn-checkout" onClick={() => setStep('checkout')}>
                     Procedi all'ordine →
@@ -99,7 +103,7 @@ export default function App() {
             </div>
             <aside className="cart-col">
               <div className="cart-sticky">
-                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} />
+                <Cart items={cartItems} onRemove={handleRemove} onQuantityChange={handleQuantityChange} cartPulse={cartPulse} />
                 <button className="btn-back" onClick={() => setStep('catalog')}>← Torna al catalogo</button>
               </div>
             </aside>
@@ -119,12 +123,22 @@ export default function App() {
               <p>Cellulare: <strong>{completedOrder.customer.cellulare}</strong></p>
 
               <div className="done-items">
-                {completedOrder.items.map(item => (
-                  <div key={item.id} className="done-item-line">
-                    <span>{item.model} {item.storage} × {item.qty}</span>
-                    <span>€{(item.price * item.qty).toFixed(2)}</span>
-                  </div>
-                ))}
+                {completedOrder.items.map(item => {
+                  const colorStr = (item.colors || [])
+                    .map(c => c === item.preferredColor ? `${c} ★` : c)
+                    .join(', ');
+                  return (
+                    <div key={item.cartKey} className="done-item-line">
+                      <span>
+                        {item.model} {item.storage}
+                        {item.isNew ? ' (NUOVO)' : ''}
+                        {' × '}{item.qty}
+                        {colorStr && <><br /><small style={{ color: '#6e6e73' }}>{colorStr}</small></>}
+                      </span>
+                      <span>€{(item.price * item.qty).toFixed(2)}</span>
+                    </div>
+                  );
+                })}
                 <div className="done-total">
                   <span>Totale</span>
                   <span>€{completedOrder.total.toFixed(2)}</span>
