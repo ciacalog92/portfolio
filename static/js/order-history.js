@@ -297,13 +297,172 @@
     if (ov) ov.classList.remove('oh-open');
   }
 
-  function exportJson() {
+  /* ---------- export Excel (.xlsx nativo, senza dipendenze) ---------- */
+
+  var CRC_TABLE = (function () {
+    var t = [];
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+
+  function crc32(bytes) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function strBytes(s) { return new TextEncoder().encode(s); }
+
+  // ZIP "stored" (nessuna compressione) dagli entry {name, bytes:Uint8Array}.
+  function zipStore(entries) {
+    function u16(v) { return [v & 0xFF, (v >>> 8) & 0xFF]; }
+    function u32(v) { return [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]; }
+
+    var parts = [];
+    var central = [];
+    var offset = 0;
+
+    entries.forEach(function (e) {
+      var nameBytes = strBytes(e.name);
+      var crc = crc32(e.bytes);
+      var size = e.bytes.length;
+
+      var local = [].concat(
+        u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0),
+        u32(crc), u32(size), u32(size), u16(nameBytes.length), u16(0)
+      );
+      parts.push(new Uint8Array(local), nameBytes, e.bytes);
+
+      var cen = [].concat(
+        u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+        u32(crc), u32(size), u32(size), u16(nameBytes.length),
+        u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset)
+      );
+      central.push(new Uint8Array(cen), nameBytes);
+
+      offset += local.length + nameBytes.length + size;
+    });
+
+    var centralStart = offset;
+    var centralSize = central.reduce(function (n, a) { return n + a.length; }, 0);
+    var eocd = new Uint8Array([].concat(
+      u32(0x06054b50), u16(0), u16(0),
+      u16(entries.length), u16(entries.length),
+      u32(centralSize), u32(centralStart), u16(0)
+    ));
+
+    var all = parts.concat(central).concat([eocd]);
+    var total = all.reduce(function (n, a) { return n + a.length; }, 0);
+    var out = new Uint8Array(total);
+    var pos = 0;
+    all.forEach(function (a) { out.set(a, pos); pos += a.length; });
+    return out;
+  }
+
+  function colLetter(n) {
+    var s = '';
+    n += 1;
+    while (n > 0) { var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+    return s;
+  }
+
+  function xmlEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function buildXlsx(orders) {
+    var headers = ['Data', 'Nome', 'Cognome', 'Cellulare', 'Email', 'Sede',
+      'Dispositivi', 'Accessori singoli', 'Bundle', 'Note', 'Totale (€)'];
+    var rows = [headers.map(function (h) { return { t: 's', v: h }; })];
+
+    orders.forEach(function (o) {
+      var c = o.customer || {};
+      var dispositivi = (o.items || []).map(function (it) {
+        return (it.model || '') + ' ' + (it.storage || '') + (it.isNew ? ' NUOVO' : '') +
+          ' x' + (it.qty || 1) + (it.colors ? ' (' + it.colors + ')' : '');
+      }).join('; ');
+      var singoli = (o.singles || []).map(function (s) {
+        return (s.name || '') + ' x' + (s.qty || 1);
+      }).join('; ');
+      var bundle = o.bundle ? ('Sì — ' + (o.bundle.items || []).join(' · ')) : '';
+      var note = (o.notes || '').replace(/\s*\n\s*/g, ' / ');
+      rows.push([
+        { t: 's', v: o.date || '' },
+        { t: 's', v: c.nome || '' },
+        { t: 's', v: c.cognome || '' },
+        { t: 's', v: c.cellulare || '' },
+        { t: 's', v: c.email || '' },
+        { t: 's', v: c.sede || '' },
+        { t: 's', v: dispositivi },
+        { t: 's', v: singoli },
+        { t: 's', v: bundle },
+        { t: 's', v: note },
+        { t: 'n', v: (o.total != null ? o.total : 0) }
+      ]);
+    });
+
+    var sheetRows = rows.map(function (cells, r) {
+      var cellXml = cells.map(function (cell, ci) {
+        var ref = colLetter(ci) + (r + 1);
+        if (cell.t === 'n') {
+          return '<c r="' + ref + '"><v>' + (Number(cell.v) || 0) + '</v></c>';
+        }
+        return '<c r="' + ref + '" t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(cell.v) + '</t></is></c>';
+      }).join('');
+      return '<row r="' + (r + 1) + '">' + cellXml + '</row>';
+    }).join('');
+
+    var sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<cols><col min="7" max="10" width="28"/></cols>' +
+      '<sheetData>' + sheetRows + '</sheetData></worksheet>';
+
+    var contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '</Types>';
+
+    var rootRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>';
+
+    var workbook = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheets><sheet name="Ordini" sheetId="1" r:id="rId1"/></sheets></workbook>';
+
+    var wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+      '</Relationships>';
+
+    return zipStore([
+      { name: '[Content_Types].xml', bytes: strBytes(contentTypes) },
+      { name: '_rels/.rels', bytes: strBytes(rootRels) },
+      { name: 'xl/workbook.xml', bytes: strBytes(workbook) },
+      { name: 'xl/_rels/workbook.xml.rels', bytes: strBytes(wbRels) },
+      { name: 'xl/worksheets/sheet1.xml', bytes: strBytes(sheet) }
+    ]);
+  }
+
+  function exportExcel() {
     var orders = loadOrders();
-    var blob = new Blob([JSON.stringify(orders, null, 2)], { type: 'application/json' });
+    var bytes = buildXlsx(orders);
+    var blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'ordini-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.download = 'ordini-' + new Date().toISOString().slice(0, 10) + '.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -328,7 +487,7 @@
       + '<div class="oh-head">'
       + '<h2>Storico ordini</h2>'
       + '<div class="oh-head-actions">'
-      + '<button class="oh-btn" data-act="export">Esporta JSON</button>'
+      + '<button class="oh-btn" data-act="export">Esporta Excel</button>'
       + '<button class="oh-btn oh-danger" data-act="clear">Svuota</button>'
       + '<button class="oh-btn oh-close" data-act="close" aria-label="Chiudi">&times;</button>'
       + '</div></div>'
@@ -349,7 +508,7 @@
         }
         return;
       }
-      if (act === 'export') return exportJson();
+      if (act === 'export') return exportExcel();
       if (act === 'delete') {
         var id = (e.target.closest('[data-id]') || {}).getAttribute && e.target.closest('[data-id]').getAttribute('data-id');
         if (id && confirm('Eliminare questo ordine?')) {
