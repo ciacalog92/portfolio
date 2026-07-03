@@ -20,6 +20,121 @@
     } catch (e) {}
   }
 
+  /* ---------- Supabase (fonte dati condivisa; localStorage = cache offline) ---------- */
+
+  var SB_URL = 'https://veirkdcidicngnbomgel.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlaXJrZGNpZGljbmduYm9tZ2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0OTAsImV4cCI6MjA5ODY2MTQ5MH0.kjrSrlCNIZg9B7luoMwttCFeQy3GhoN-XY_SEfBqfnE';
+  var SB_REST = SB_URL + '/rest/v1/ordini';
+
+  function sbEnabled() { return typeof window.fetch === 'function'; }
+
+  function sbHeaders(extra) {
+    var h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+    if (extra) for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+
+  function isUuid(id) {
+    return typeof id === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }
+
+  function orderToRow(o) {
+    var c = o.customer || {};
+    return {
+      order_date: o.date || '',
+      customer_nome: c.nome || '',
+      customer_cognome: c.cognome || '',
+      customer_cellulare: c.cellulare || '',
+      customer_email: c.email || '',
+      sede: c.sede || '',
+      total: (o.total != null ? o.total : 0),
+      data: o
+    };
+  }
+
+  function rowToOrder(r) {
+    var o = {};
+    var d = r.data || {};
+    for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) o[k] = d[k];
+    o.id = r.id;                       // uuid del DB, usato per elimina/sync
+    o.date = r.order_date || o.date || '';
+    o.total = (r.total != null ? r.total : o.total);
+    o.savedAt = r.created_at || o.savedAt;
+    return o;
+  }
+
+  // Sincronizzazione unificata: prima carica sul DB gli ordini locali non ancora
+  // sincronizzati (id non-uuid: cache pre-esistente o ordini creati offline),
+  // poi scarica la lista autorevole e aggiorna cache + UI.
+  // Un lock evita run concorrenti; gli ordini aggiunti durante un sync in corso
+  // vengono preservati e ripresi al giro successivo.
+  var _syncing = false, _syncQueued = false;
+
+  function pullRemote(pushedIds, cb) {
+    window.fetch(SB_REST + '?select=*&order=created_at.desc&limit=1000', { headers: sbHeaders() })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)); })
+      .then(function (rows) {
+        var remote = (rows || []).map(rowToOrder);
+        // Preserva gli ordini locali non-uuid non ancora inviati (aggiunti dopo lo snapshot).
+        var extra = loadOrders().filter(function (o) {
+          return !isUuid(o.id) && pushedIds.indexOf(o.id) === -1;
+        });
+        saveOrders(extra.concat(remote));
+        renderOrders();
+        cb(true);
+      })
+      .catch(function () { cb(false); });
+  }
+
+  function syncNow(cb) {
+    if (!sbEnabled()) { if (cb) cb(false); return; }
+    if (_syncing) { _syncQueued = true; if (cb) cb(false); return; }
+    _syncing = true;
+
+    var pending = loadOrders().filter(function (o) { return !isUuid(o.id); });
+    var pushedIds = pending.map(function (o) { return o.id; });
+
+    var done = function (ok) {
+      _syncing = false;
+      if (_syncQueued) { _syncQueued = false; syncNow(); }
+      if (cb) cb(ok);
+    };
+
+    if (pending.length) {
+      // Invio in blocco (dal più vecchio) così l'ordine cronologico si conserva.
+      var payload = pending.slice().reverse().map(orderToRow);
+      window.fetch(SB_REST, {
+        method: 'POST', headers: sbHeaders({ Prefer: 'return=minimal' }), body: JSON.stringify(payload)
+      })
+        .then(function (r) {
+          if (r.ok) pullRemote(pushedIds, done);
+          else done(false);          // errore server: tieni gli ordini in sospeso, riprova dopo
+        })
+        .catch(function () { done(false); });   // offline: idem
+    } else {
+      pullRemote([], done);
+    }
+  }
+
+  function sbDelete(id, cb) {
+    if (!sbEnabled()) { if (cb) cb(false); return; }
+    window.fetch(SB_REST + '?id=eq.' + encodeURIComponent(id), {
+      method: 'DELETE', headers: sbHeaders({ Prefer: 'return=minimal' })
+    })
+      .then(function (r) { if (cb) cb(r.ok); })
+      .catch(function () { if (cb) cb(false); });
+  }
+
+  function sbClear(cb) {
+    if (!sbEnabled()) { if (cb) cb(false); return; }
+    window.fetch(SB_REST + '?id=not.is.null', {
+      method: 'DELETE', headers: sbHeaders({ Prefer: 'return=minimal' })
+    })
+      .then(function (r) { if (cb) cb(r.ok); })
+      .catch(function () { if (cb) cb(false); });
+  }
+
   function parseOrderBody(text) {
     var lines = text.split('\n');
     var order = {
@@ -138,7 +253,8 @@
         var orders = loadOrders();
         orders.unshift(order);
         if (orders.length > 500) orders.length = 500;
-        saveOrders(orders);
+        saveOrders(orders);        // cache locale immediata (feedback istantaneo / offline)
+        syncNow();                 // invia al DB condiviso, poi ri-sincronizza
       }
     } catch (e) {}
     return origEncode.apply(this, arguments);
@@ -290,7 +406,7 @@
 
   function open() {
     var ov = document.getElementById('oh-overlay');
-    if (ov) { renderOrders(); ov.classList.add('oh-open'); }
+    if (ov) { renderOrders(); ov.classList.add('oh-open'); syncNow(); }
   }
   function close() {
     var ov = document.getElementById('oh-overlay');
@@ -502,9 +618,10 @@
       }
       if (act === 'close') return close();
       if (act === 'clear') {
-        if (confirm('Eliminare tutti gli ordini salvati?')) {
+        if (confirm('Eliminare tutti gli ordini salvati (anche sul cloud)?')) {
           saveOrders([]);
           renderOrders();
+          sbClear(function () { syncNow(); });
         }
         return;
       }
@@ -514,6 +631,7 @@
         if (id && confirm('Eliminare questo ordine?')) {
           saveOrders(loadOrders().filter(function (o) { return o.id !== id; }));
           renderOrders();
+          if (isUuid(id)) sbDelete(id, function () { syncNow(); });
         }
         return;
       }
@@ -525,6 +643,7 @@
     document.body.appendChild(overlay);
 
     renderOrders();
+    syncNow();   // migra eventuali ordini locali e carica quelli gia sul cloud
   }
 
   if (document.readyState === 'loading') {
