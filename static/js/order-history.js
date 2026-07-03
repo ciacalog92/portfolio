@@ -28,9 +28,12 @@
       date: '',
       customer: { nome: '', cognome: '', cellulare: '', email: '', sede: '' },
       items: [],
+      singles: [],
       bundle: null,
+      notes: '',
       total: 0
     };
+    var noteLines = [];
 
     var section = '';
     var currentItem = null;
@@ -57,6 +60,8 @@
         order.bundle = { label: trimmed, items: [], saving: '' };
         continue;
       }
+      if (trimmed === 'PRODOTTI SINGOLI SCONTATI') { pushItem(); section = 'singles'; continue; }
+      if (trimmed === 'NOTE ORDINE') { pushItem(); section = 'notes'; continue; }
       if (trimmed.indexOf('TOTALE:') === 0) {
         pushItem();
         var m = trimmed.match(/€\s*([\d.,]+)/);
@@ -98,9 +103,30 @@
         } else if (line.indexOf('   ') === 0 && trimmed) {
           order.bundle.items.push(trimmed);
         }
+      } else if (section === 'singles') {
+        var sm = trimmed.match(/^(?:\d+\.\s+)?(.+?)\s+x(\d+)\s+→\s+€([\d.,]+)$/);
+        if (sm) {
+          order.singles.push({
+            name: sm[1].trim(),
+            qty: parseInt(sm[2], 10),
+            lineTotal: parseFloat(sm[3].replace(',', '.'))
+          });
+        } else {
+          var sm2 = trimmed.match(/^(.+?)\s+→\s+€([\d.,]+)$/);
+          if (sm2) {
+            order.singles.push({
+              name: sm2[1].trim(),
+              qty: 1,
+              lineTotal: parseFloat(sm2[2].replace(',', '.'))
+            });
+          }
+        }
+      } else if (section === 'notes') {
+        if (line.indexOf('   ') === 0 && trimmed) noteLines.push(trimmed);
       }
     }
     pushItem();
+    order.notes = noteLines.join('\n');
     return order;
   }
 
@@ -195,6 +221,22 @@
         + '</div>';
     }
 
+    var singlesHtml = '';
+    if (o.singles && o.singles.length) {
+      var rows = o.singles.map(function (it) {
+        return '<div class="oh-item-row"><div>'
+          + escapeHtml(it.name || '') + ' &times;' + (it.qty || 1)
+          + '</div><div>&euro;' + (it.lineTotal != null ? it.lineTotal : 0).toFixed(2) + '</div></div>';
+      }).join('');
+      singlesHtml = '<div class="oh-sec"><div class="oh-sec-title">Accessori singoli scontati</div>' + rows + '</div>';
+    }
+
+    var notesHtml = '';
+    if (o.notes) {
+      notesHtml = '<div class="oh-sec"><div class="oh-sec-title">Note ordine</div>'
+        + '<div style="white-space:pre-wrap">' + escapeHtml(o.notes) + '</div></div>';
+    }
+
     var c = o.customer || {};
     var phoneLink = c.cellulare ? '<a class="oh-link" href="tel:' + escapeHtml(c.cellulare.replace(/\s+/g, '')) + '">' + escapeHtml(c.cellulare) + '</a>' : '';
     var mailLink = c.email ? '<a class="oh-link" href="mailto:' + escapeHtml(c.email) + '">' + escapeHtml(c.email) + '</a>' : '';
@@ -207,7 +249,9 @@
       + (c.sede ? '<div>Sede: ' + escapeHtml(c.sede) + '</div>' : '')
       + '</div>'
       + '<div class="oh-sec"><div class="oh-sec-title">Prodotti</div>' + itemsHtml + '</div>'
+      + singlesHtml
       + bundleHtml
+      + notesHtml
       + '<div class="oh-card-actions">'
       + '<button class="oh-btn oh-danger" data-act="delete" data-id="' + escapeHtml(o.id) + '">Elimina ordine</button>'
       + '</div></div>';
